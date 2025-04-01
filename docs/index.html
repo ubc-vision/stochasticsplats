@@ -1,0 +1,229 @@
+<link rel="stylesheet" type="text/css" href="./style.css" media="screen" />
+
+<html lang="en">
+
+<head>
+    <title>
+        StochasticSplats
+    </title>
+    <meta property="og:title" content="StochasticSplats" />
+    <style>
+        body {
+            text-align: center;
+            background-color: #ffffff;
+            /* Optional: Set a background color for better visibility */
+        }
+
+        .larger-arrow {
+            font-size: 2.0em;
+            /* Adjust the font size as needed */
+            letter-spacing: 4.0em;
+            /* Adjust the letter spacing as needed */
+            display: inline-block;
+            /* Ensures text-align works */
+        }
+    </style>
+</head>
+<head>
+    <link rel="stylesheet" href="./resources/css/bulma.min.css" />
+    <link rel="stylesheet" href="./resources/css/slide.css" />
+    <link rel="stylesheet" href="./resources/css/bulma-carousel.min.css" />
+    <link rel="stylesheet" href="./resources/css/bulma-slider.min.css" />
+    <link rel="stylesheet" href="./resources/css/fontawesome.all.min.css" />
+    <link rel="stylesheet" href="./resources/css/carasoul.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" />
+    <link rel="stylesheet" href="./resources/css/index.css" />
+    <link rel="icon" href="./resources/images/favicon.svg" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet"
+          type="text/css"
+          href="./resources/css/style.css"
+          media="screen" />
+    <link rel="stylesheet" href="resources/css/dics.original.css" />
+    <title>StochasticSplats</title>
+
+    <meta property="og:title"
+          content="Stochastic Rasterization for Sorting-Free 3D Gaussian Splatting" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+
+        body {
+            text-align: center;
+            background-color: #f0f0f0; /* Optional: Set a background color for better visibility */
+        }
+
+        .larger-arrow {
+            font-size: 2em; /* Adjust the font size as needed */
+            letter-spacing: 4em; /* Adjust the letter spacing as needed */
+            display: inline-block; /* Ensures text-align works */
+        }
+
+        .tbl_video {
+            margin-bottom: 40px;
+        }
+    </style>
+    <script src="resources/js/video_comparison.js"></script>
+    <script src="resources/js/dics.original.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="title">
+            StochasticSplats:<br>
+            Stochastic Rasterization for Sorting-Free 3D Gaussian Splatting
+        </div>
+        <!-- <div class="venue">
+        CVPR 2025 Submission
+        <br>
+        <br>
+        Paper ID: 6136
+    </div>
+    <br> -->
+        <!-- <div class="venue">
+        <a href="resources/suppl_pdf/suppl.pdf" target="_blank"> [Supplementary PDF] </a>
+    </div> -->
+        <br><br><br>
+        <hr>
+        <br>
+        <img style="width: 80%;" src="resources/images/teaser.png" alt="Teaser figure." />
+        <br>
+        <br>
+        <hr>
+        <h1>Abstract</h1>
+        <p style="width: 80%;">
+            3D Gaussian splatting(3DGS) is a popular radiance field method, with many application-specific extensions. Most variants rely on the same core algorithm: depth-sorting of Gaussian splats then rasterizing in primitive order. This ensures correct alpha compositing, but can cause rendering artifacts due to built-in approximations.
+            Moreover, for a fixed representation, sorted rendering offers little control over render cost and visual fidelity.
+            For example, and counter-intuitively, rendering a lower-resolution image is not necessarily faster.
+            In this work, we address the above limitations by combining 3D Gaussian splatting with stochastic rasterization. Concretely, we leverage an unbiased Monte Carlo estimator of the volume rendering equation.
+            This removes the need for sorting, and allows for accurate 3D blending of overlapping Gaussians.
+            The number of Monte Carlo samples further imbues 3DGS with a way to trade off computation time and quality.
+            We implement our method using OpenGL shaders, enabling efficient rendering on  modern GPU hardware.
+            At a reasonable visual quality, our method renders more than four times faster than sorted rasterization.
+        </p>
+        <br>
+        <br>
+        <!-- Empty Row for Spacing -->
+        <tr>
+            <td colspan="4" style="height: 15px;"></td>
+        </tr>
+        <style>
+
+            #materials {
+                transform: scaleX(-1); /* Mirror the video horizontally */
+            }
+        </style>
+        <hr>
+        <h1>Effect of popping</h1>
+        <div class="parent-video-compare-container" id="trainb">
+            <div class="video-compare-container" id="materialsDiv">
+                <video class="video"
+                       id="materials"
+                       loop
+                       playsinline
+                       autoplay
+                       muted
+                       src="./resources/popping/popcat.mp4"
+                       onplay="resizeAndPlay(this)"></video>
+                <canvas height="0" class="videoMerge" id="materialsMerge"></canvas>
+            </div>
+            <p>
+                This comparison showcases a trajectory in the Garden scene from the MipNerf360 dataset being rendered using StochasticSplats and 3DGS. Use the slider to see how the fine-tuned StochasticSplats effectively removes the popping artifact. Pay close attention to the metal surface of the table for a clear visual difference.
+            </p>
+
+
+        </div>
+        <hr>
+        <h1>Using 1 Sample-Per-Pixel (SPP) <strong>without</strong> Temporal Anti-Aliasing (TAA)</h1>
+        <p>These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
+        <table class="tbl_video">
+            <!-- Text Above Each Pair -->
+            <tr>
+                <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Bonsai</td>
+            </tr>
+
+            <tr>
+                <td>
+                    <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+                           muted>
+                        <source src="resources/interactive/room-1spp-no-taa.mp4" type="video/mp4">
+                    </video>
+                </td>
+            </tr>
+            </tr>
+        </table>
+        <hr>
+        <h1>Using 1 Sample-Per-Pixel (SPP) <strong>with</strong> Temporal Anti-Aliasing (TAA)</h1>
+        <p>These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
+        <table class="tbl_video">
+            <!-- Text Above Each Pair -->
+            <tr>
+                <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Bonsai</td>
+            </tr>
+
+            <tr>
+                <td>
+                    <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+                           muted>
+                        <source src="resources/interactive/bonsai-1spp-taa.mp4" type="video/mp4">
+                    </video>
+                </td>
+            </tr>
+            </tr>
+        </table>
+        <table class="tbl_video">
+            <!-- Text Above Each Pair -->
+            <tr>
+                <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Kitchen</td>
+            </tr>
+
+            <tr>
+                <td>
+                    <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+                           muted>
+                        <source src="resources/interactive/kitchen-1spp-taa.mp4" type="video/mp4">
+                    </video>
+                </td>
+            </tr>
+            </tr>
+        </table>
+
+        <table class="tbl_video">
+            <!-- Text Above Each Pair -->
+            <tr>
+                <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Bicycle</td>
+            </tr>
+
+            <tr>
+                <td>
+                    <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+                           muted>
+                        <source src="resources/interactive/bicycle-1spp-taa.mp4" type="video/mp4">
+                    </video>
+                </td>
+            </tr>
+            </tr>
+        </table>
+        <table class="tbl_video">
+            <!-- Text Above Each Pair -->
+            <tr>
+                <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Stump</td>
+            </tr>
+
+            <tr>
+                <td>
+                    <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+                           muted>
+                        <source src="resources/interactive/stump-1spp-taa.mp4" type="video/mp4">
+                    </video>
+                </td>
+            </tr>
+            </tr>
+        </table>
+        <br>
+        <br>
+
+</body>
+
+</html>
