@@ -363,3 +363,7 @@ a:hover {
   .b-dics__slider:after {
     width: 2px;
   }
+
+  .language-bibtex {
+    user-select: all;
+  }
