@@ -284,3 +284,30 @@ object-fit: cover;
     width: 100%;
     max-width: none;
   }
+
+figure {
+    display: inline-block;
+    margin: 0; 
+    vertical-align: middle;
+}
+
+figcaption {
+    text-align: left; 
+    font-style: italic;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-top: 5px;
+    margin-bottom: 25px;
+}
+
+.subcaption-container {
+  display: flex;                 /* Treat the figcaption as a flex container */
+  justify-content: space-evenly; /* Distribute items evenly along the main axis */
+                                 /* Alternatives: space-between, space-around */
+  align-items: flex-start;       /* Align items at the top if they wrap */
+  margin-top: 8px;               /* Add some space between the image and subcaptions */
+  width: 100%;                   /* Ensure the container uses the full figure width */
+  text-align: center;            /* Center text within each span */
+  margin-bottom: 5px;
+
+}
