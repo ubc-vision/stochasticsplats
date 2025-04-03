@@ -193,6 +193,10 @@
                 <figure style="width: 49%;">
                     <img src="resources/images/st_intro.png" alt="Stochastic transparency introduction"
                         style="width: 100%; display: block;" />
+                    <figcaption class="subcaption-container">
+                        <span>Alpha blending</span>
+                        <span>Stochastic transparency (4 SPP)</span>
+                    </figcaption>
                     <figcaption><b>Blending vs. stochastic</b> - We visualize a 1D and 3D example of the different ways
                         to compute transparency. Two foreground Gaussians are composited on a white background.
                     </figcaption>
@@ -243,16 +247,13 @@
                         <span>StopThePop vs. ours</span>
                     </figcaption>
                     <figcaption>
-                        <b>Popping in 3DGS</b> – (left) As sorting in 3DGS is done
-                        with respect to the z distance of the Gaussian mean from the
-                        camera, a small camera rotation can cause visible "popping" artifacts (i.e., sudden pixel color
-                        changes). (right) StopThePop [Radl et al. 2024]
-                        corrects for this behavior by associating a surface with each Gaussian, and determining the
-                        depth z per-fragment (dashed line),
-                        rather than per-Gaussian. Our solution leads to visually comparable results, but approximates
-                        this surface linearly (solid line), so
-                        that per-fragment depth z can be computed efficiently in hardware
-                        .
+                        <b>Popping in 3DGS</b> – (left) As sorting in 3DGS is done with respect to the z distance of the
+                        Gaussian mean from the camera, a small camera rotation can cause visible "popping" artifacts
+                        (i.e., sudden pixel color changes). (right) StopThePop [Radl et al. 2024] corrects for this
+                        behavior by associating a surface with each Gaussian, and determining the depth z per-fragment
+                        (dashed line), rather than per-Gaussian. Our solution leads to visually comparable results, but
+                        approximates this surface linearly (solid line), so that per-fragment depth z can be computed
+                        efficiently in hardware.
                     </figcaption>
                 </figure>
 
