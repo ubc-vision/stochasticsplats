@@ -356,3 +356,14 @@ img.copy-icon:hover {
   transform: scale(1.05);
   transition: all ease 150ms;
 }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.row figure {
+  flex: 1;
+}
+
