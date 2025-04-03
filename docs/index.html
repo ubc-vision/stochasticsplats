@@ -182,11 +182,12 @@
             <hr>
             <h1>Method</h1>
             <p>
-                The core idea of our method is to replace the sorted alpha blending used by 3DGS with a stochastic
+                <b>Sort-free rendering.</b> The core idea of our method is to replace the sorted alpha blending used by 3DGS with a stochastic
                 estimator. Stochastic transparency [Enderton et al. 2010] estimates the result of alpha blending using a
-                Monte Carlo sum. Each rendered fragment is kept with a probability that matches its alpha value, and
+                Monte Carlo sum. A rasterized fragment is kept with a probability that matches its alpha value, and
                 discarded otherwise. Centrally, each individual fragment is opaque and can be rendered using standard,
-                unsorted rasterization with z-buffer. This process is illustrated in the following figure:
+                unsorted rasterization with z-buffer. We apply this method to replace the sorted alpha blending of 3DGS.
+                The following figure and pseudocode illustrate the basic stochastic transparency estimator:
             </p>
             <div class="row">
 
@@ -197,7 +198,8 @@
                         <span>Alpha blending</span>
                         <span>Stochastic transparency (4 SPP)</span>
                     </figcaption>
-                    <figcaption><b>Blending vs. stochastic</b> - We visualize a 1D and 3D example of the different ways
+                    <figcaption><b>Blending vs. stochastic</b> - We visualize a 1D (top) and 3D example (bottom) of the
+                        different ways
                         to compute transparency. Two foreground Gaussians are composited on a white background.
                     </figcaption>
                 </figure>
@@ -206,12 +208,14 @@
                     <img src="resources/images/pseudocode.png" alt="Stochastic transparency pseudocode"
                         style="width: 100%; display: block;" />
                     <figcaption> <b>Pseudocode for stochastic transparency</b> - We denote \(\alpha_i\) the opacity,
-                        \(z_i\) the depth and \(c_i\) the color of of Gaussian \(i\).</figcaption>
+                        \(z_i\) the depth and \(c_i\) the color of of Gaussian \(i\). In practice, this algorithm can
+                        is compatible with the hardware-rasterization pipeline and can be implemented in the pixel
+                        shader.</figcaption>
                 </figure>
             </div>
             <p>
-                Following recent work on differentiable rendering, we also formulate an unbiased gradient estimator,
-                which can estimate reverse-mode gradients without storing a large automatic differentiation graph. The
+                <b>Gradient estimator.</b> Following recent work on differentiable rendering, we also formulate an unbiased gradient estimator,
+                which can estimate reverse-mode gradients without storing a heavy automatic differentiation graph. The
                 following figure validates the gradients computed using that method in forward-mode, i.e., by rendering
                 a <i>gradient image</i> due to a global translation along x:
             </p>
@@ -227,16 +231,16 @@
                     <b>Stochastic gradients</b> - We compare alpha blending gradients to our stochastic estimator with
                     128 and 512 SPP. Red and
                     blue colors encode positive and negative values, respectively. Our
-                    estimator accurately approximates the alpha blending gradients.
+                    estimator accurately approximates the groundtruth alpha blending gradients.
                 </figcaption>
             </figure>
 
             <p>
-                Stochastic transparency further enables both <i>pop-free</i> rendering. Similar to StopThePop [Radl et
-                al. 2024], we can approximate the depth of a Gaussian as a (view-dependent) surface. We propose to use a
-                simple plane-approximation, that is a good fit for the GPU rasterization pipeline (unlike StopThePop's
-                curved surface). Moreover, stochastic transparency allows full 3D <i>intermixing</i> of 3D Gaussians. We
-                showcase both the plane-approximation and full intermixing in the following:
+                <b>Pop-free rendering.</b> Stochastic transparency further enables various versions of <i>pop-free</i> rendering. Similar to StopThePop [Radl et
+                al. 2024], we approximate the depth of a Gaussian as a (view-dependent) surface. We propose to use a
+                simple plane-approximation, which is a good fit for the hardware rasterization pipeline (unlike StopThePop's
+                curved surface). Moreover, stochastic transparency allows full 3D <i>intermixing</i> of 3D Gaussians, which avoids the discontinuities inherent to other "pop-free" techniques. We
+                showcase both the plane-approximation and full intermixing in the following figures:
             </p>
             <div class="row">
                 <figure style="width: 49%;">
@@ -247,12 +251,12 @@
                         <span>StopThePop vs. ours</span>
                     </figcaption>
                     <figcaption>
-                        <b>Popping in 3DGS</b> – (left) As sorting in 3DGS is done with respect to the z distance of the
+                        <b>Popping in 3DGS</b> – (left) As sorting in 3DGS is done with respect to the \(z\) distance of the
                         Gaussian mean from the camera, a small camera rotation can cause visible "popping" artifacts
                         (i.e., sudden pixel color changes). (right) StopThePop [Radl et al. 2024] corrects for this
-                        behavior by associating a surface with each Gaussian, and determining the depth z per-fragment
+                        behavior by associating a surface with each Gaussian, and determining the depth \(z\) per-fragment
                         (dashed line), rather than per-Gaussian. Our solution leads to visually comparable results, but
-                        approximates this surface linearly (solid line), so that per-fragment depth z can be computed
+                        approximates this surface linearly (solid line), so that per-fragment depth \(z\) can be computed
                         efficiently in hardware.
                     </figcaption>
                 </figure>
