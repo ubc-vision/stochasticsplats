@@ -333,10 +333,12 @@ figcaption {
 
 .subcaption-container {
   display: flex;
-  justify-content: space-evenly;
-  align-items: flex-start;
   margin-top: 8px;
   width: 100%;
-  text-align: center;
   margin-bottom: 5px;
+}
+
+.subcaption-container span {
+  flex: 1;
+  text-align: center;
 }
