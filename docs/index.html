@@ -273,12 +273,12 @@
                 </figure>
             </div>
             <hr>
-            <h1>Effect of popping</h1>
+            <h1>Pop-free rendering</h1>
             <p>
-                This comparison showcases a trajectory in the Garden scene from the MipNerf360 dataset being rendered
-                using StochasticSplats and 3DGS. Use the slider to see how the fine-tuned StochasticSplats effectively
-                removes the popping artifact. Pay close attention to the metal surface of the table for a clear visual
-                difference.
+                This comparison showcases a rendered trajectory in the <i>Garden</i> scene from the MipNerf360 dataset
+                using both StochasticSplats and standard, sorted 3DGS. Use the slider to see how our fine-tuned
+                StochasticSplats effectively
+                removes distracting popping artifacts (for example on the metal surface in the middle of the table):
             </p>
             <div class="video-compare-container" id="materialsDiv">
                 <video class="video" id="materials" loop playsinline autoplay muted src="./resources/popping/popcat.mp4"
@@ -286,29 +286,12 @@
                 <canvas height="0" class="videoMerge" id="materialsMerge"></canvas>
             </div>
             <hr>
-            <h1>Using 1 Sample-Per-Pixel (SPP) <strong>without</strong> Temporal Anti-Aliasing (TAA)</h1>
-            <p>These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro
-                T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
-            <table class="tbl_video">
-                <!-- Text Above Each Pair -->
-                <tr>
-                    <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Room</td>
-                </tr>
-
-                <tr>
-                    <td>
-                        <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
-                            muted>
-                            <source src="resources/interactive/room-1spp-no-taa.mp4" type="video/mp4">
-                        </video>
-                    </td>
-                </tr>
-                </tr>
-            </table>
-            <hr>
-            <h1>Using 1 Sample-Per-Pixel (SPP) <strong>with</strong> Temporal Anti-Aliasing (TAA)</h1>
-            <p>These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro
-                T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
+            <h1>Results with temporal anti-aliasing (TAA)</h1>
+            <p>The following MipNerf360 scenes are rendered using our OpenGL implementation and 1 sample
+                per pixel. We average samples over multiple frames using a simple temporal anti-aliasing (TAA)
+                implementation.
+                We achieve smooth rendering on a low-end laptop with an NVIDIA Quadro
+                T1000 Max-Q GPU, where we recorded the screen using the NVIDIA app.</p>
             <table class="tbl_video">
                 <!-- Text Above Each Pair -->
                 <tr>
@@ -374,8 +357,27 @@
                 </tr>
                 </tr>
             </table>
-            <br>
-            <br>
+            <hr>
+            <h1> Results <strong>without</strong> temporal anti-aliasing (TAA)</h1>
+            <p>The following scene is rendered using 1 sample per pixel without temporal anti-aliasing, showcasing the
+                variance of the unprocessed estimator:
+            </p>
+            <table class="tbl_video">
+                <!-- Text Above Each Pair -->
+                <tr>
+                    <td colspan="1" style="text-align: center; font-size: 18px; padding-bottom: 10px;">Room</td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+                            muted>
+                            <source src="resources/interactive/room-1spp-no-taa.mp4" type="video/mp4">
+                        </video>
+                    </td>
+                </tr>
+                </tr>
+            </table>
             <hr>
             <h2 class="title">BibTeX</h2>
             <div class="code-block-container">
