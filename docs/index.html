@@ -65,6 +65,11 @@
     <script src="resources/js/video_comparison.js"></script>
     <script src="resources/js/dics.original.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        function citation_select(id_name) {
+            navigator.clipboard.writeText(document.getElementById(id_name).textContent);
+        }
+    </script>
 </head>
 
 <body>
@@ -370,10 +375,11 @@
             </table>
             <br>
             <br>
-            <section class="section" id="BibTeX">
-                <div class="container is-max-desktop content">
-                    <h2 class="title">BibTeX</h2>
-                    <pre><code class="language-bibtex">@misc{KheradmandVicini2025stochasticsplats,
+            <hr>
+            <h2 class="title">BibTeX</h2>
+            <div class="code-block-container">
+                <pre>
+<code id='bibtex' class="language-bibtex">@misc{KheradmandVicini2025stochasticsplats,
   title         = {StochasticSplats: Stochastic Rasterization for Sorting-Free 3D Gaussian Splatting},
   author        = {Shakiba Kheradmand and Delio Vicini and George Kopanas and Dmitry Lagun
                     and Kwang Moo Yi and Mark Matthews and Andrea Tagliasacchi},
@@ -382,11 +388,12 @@
   eprint        = {2503.24366},
   archiveprefix = {arXiv},
   primaryclass  = {cs.CV}
-}</code></pre>
-
-                </div>
-            </section>
-
+}</code>
+<img class="copy-icon" src="./resources/images/copy-clipboard.png" alt="Copy to clipboard" onclick="citation_select('bibtex')">
+</pre>
+            </div>
+            <br />
+            <br />
 </body>
 
 </html>

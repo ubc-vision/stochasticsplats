@@ -342,3 +342,17 @@ figcaption {
   flex: 1;
   text-align: center;
 }
+
+img.copy-icon {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  cursor: pointer;
+  height: 1.5em;
+  width: auto;
+}
+
+img.copy-icon:hover {
+  transform: scale(1.05);
+  transition: all ease 150ms;
+}
