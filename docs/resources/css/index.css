@@ -25,8 +25,7 @@ body {
   font-family: "Google Sans", sans-serif;
 }
 
-.publication-title {
-}
+.publication-title {}
 
 .publication-banner {
   max-height: parent;
@@ -40,8 +39,7 @@ body {
   object-fit: fit;
 }
 
-.publication-header .hero-body {
-}
+.publication-header .hero-body {}
 
 .publication-title {
   font-family: "Google Sans", sans-serif;
@@ -69,8 +67,7 @@ body {
   font-weight: bolder;
 }
 
-.publication-authors {
-}
+.publication-authors {}
 
 .publication-authors a {
   color: hsl(204, 86%, 53%) !important;
@@ -84,8 +81,7 @@ body {
   display: inline-block;
 }
 
-.publication-banner img {
-}
+.publication-banner img {}
 
 .publication-authors {
   /*color: #4286f4;*/
@@ -109,42 +105,46 @@ body {
   height: 100%;
 }
 
-.publication-body img {
-}
+.publication-body img {}
 
 .results-carousel {
-    display: flex;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-  }
-  
-  .results-carousel .item {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin: 5px;
-    overflow: hidden;
-    border: 1px solid #bbb;
-    border-radius: 10px;
-    padding: 0;
-    font-size: 0;
-  }
-  
-  .results-carousel video {
-    margin: 0;
-    width: 100%; /* Make the video fill the width of the container */
-    height: auto;
-    object-fit: cover;
-  }
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
 
-  
+.results-carousel .item {
+  flex: 0 0 100%;
+  max-width: 100%;
+  margin: 5px;
+  overflow: hidden;
+  border: 1px solid #bbb;
+  border-radius: 10px;
+  padding: 0;
+  font-size: 0;
+}
+
+.results-carousel video {
+  margin: 0;
+  width: 100%;
+  /* Make the video fill the width of the container */
+  height: auto;
+  object-fit: cover;
+}
+
+
 
 .carousel-caption p {
   text-align: center;
-  margin-top: 10px; /* Adjust as needed */
-  margin-bottom: 10px; /* Adjust as needed */
-  font-size: 16px; /* Adjust as needed */
-  color: #333; /* Adjust as needed */
+  margin-top: 10px;
+  /* Adjust as needed */
+  margin-bottom: 10px;
+  /* Adjust as needed */
+  font-size: 16px;
+  /* Adjust as needed */
+  color: #333;
+  /* Adjust as needed */
 }
 
 .interpolation-panel {
@@ -157,8 +157,7 @@ body {
   border-radius: 5px;
 }
 
-.interpolation-video-column {
-}
+.interpolation-video-column {}
 
 .interpolation-panel .slider {
   margin: 0 !important;
@@ -171,81 +170,106 @@ body {
 #interpolation-image-wrapper {
   width: 100%;
 }
+
 #interpolation-image-wrapper img {
   border-radius: 5px;
 }
 
 .hero.teaser {
-  flex: 1; /* Each section takes equal width */
-  text-align: center; /* Center the text */
+  flex: 1;
+  /* Each section takes equal width */
+  text-align: center;
+  /* Center the text */
 }
 
 .videos-container {
   display: flex;
-  justify-content: center; /* Adjust this as needed */
-  margin-bottom: 30px; /* Add space after the videos container */
+  justify-content: center;
+  /* Adjust this as needed */
+  margin-bottom: 30px;
+  /* Add space after the videos container */
 }
 
 .video-container {
-  width: 29%; /* Adjusted to slightly less than 30% */
-  margin-right: 2%; /* Space between the videos */
+  width: 29%;
+  /* Adjusted to slightly less than 30% */
+  margin-right: 2%;
+  /* Space between the videos */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .video-container:last-child {
-  margin-right: 0; /* Remove margin for the last video container */
+  margin-right: 0;
+  /* Remove margin for the last video container */
 }
 
 .video-container video {
-  width: 100%; /* Make video take full width of its container */
-  height: auto; /* Maintain aspect ratio */
-  margin-bottom: 20px; /* Add space below the video */
+  width: 100%;
+  /* Make video take full width of its container */
+  height: auto;
+  /* Maintain aspect ratio */
+  margin-bottom: 20px;
+  /* Add space below the video */
 }
 
 
 video {
-  width: 100%; /* Make video take full width of its container */
-  height: auto; /* Maintain aspect ratio */
+  width: 100%;
+  /* Make video take full width of its container */
+  height: auto;
+  /* Maintain aspect ratio */
 }
 
 
 .videos-container-2 {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%; /* Set the desired width */
-    height: 100%; /* Set the desired height */
-    margin: 0 auto; /* Center the container horizontally */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  /* Set the desired width */
+  height: 100%;
+  /* Set the desired height */
+  margin: 0 auto;
+  /* Center the container horizontally */
 }
 
 .video-container-2 {
-width: 80%; /* Adjusted to slightly less than 30% */
-margin-right: 2%; /* Space between the videos */
-display: flex;
-flex-direction: column;
-align-items: center;
-margin-bottom: 20px; 
-} 
+  width: 80%;
+  /* Adjusted to slightly less than 30% */
+  margin-right: 2%;
+  /* Space between the videos */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
 .video-container-2:last-child {
-margin-right: 0; /* Remove margin for the last video container */
-} 
+  margin-right: 0;
+  /* Remove margin for the last video container */
+}
 
 .video-container-2 video {
-width: 100%;
-height: 100%;
-object-fit: cover;
-} 
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .centered-line {
-  width: 75%; /* Adjust the width as needed */
-  height: 10px; /* This controls the thickness of the line */
-  background-color: blue; /* Choose the color of the line */
-  margin: 0 auto; /* This centers the line horizontally */
-  margin-top: 40px; /* Space above the line */
-  margin-bottom: 50px; /* Space below the line */
+  width: 75%;
+  /* Adjust the width as needed */
+  height: 10px;
+  /* This controls the thickness of the line */
+  background-color: blue;
+  /* Choose the color of the line */
+  margin: 0 auto;
+  /* This centers the line horizontally */
+  margin-top: 40px;
+  /* Space above the line */
+  margin-bottom: 50px;
+  /* Space below the line */
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
   background: linear-gradient(to right, #1e5799, #2989d8, #207cca, #7db9e8, #207cca, #2989d8, #1e5799);
   border-radius: 5px;
@@ -253,61 +277,66 @@ object-fit: cover;
 
 
 .centered-line2 {
-  width: 75%; /* Adjust the width as needed */
-  height: 10px; /* This controls the thickness of the line */
-  background-color: black; /* Choose the color of the line */
-  margin: 0 auto; /* This centers the line horizontally */
-  margin-top: 1px; /* Space above the line */
-  margin-bottom: 1px; /* Space below the line */
+  width: 75%;
+  /* Adjust the width as needed */
+  height: 10px;
+  /* This controls the thickness of the line */
+  background-color: black;
+  /* Choose the color of the line */
+  margin: 0 auto;
+  /* This centers the line horizontally */
+  margin-top: 1px;
+  /* Space above the line */
+  margin-bottom: 1px;
+  /* Space below the line */
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
   border-radius: 5px;
   background: linear-gradient(to right, white, black, white);
 }
 
 .subtitle {
-  margin-top: 10px; /* Adjust the value to create more or less space */
+  margin-top: 10px;
+  /* Adjust the value to create more or less space */
 }
 
 .hero.is-light.is-small {
-    background-color: lightcyan;
-    width: 80%;
-    margin-left:10%;
-  }
+  background-color: lightcyan;
+  width: 80%;
+  margin-left: 10%;
+}
 
-  .video {
-    width: 1280px;
-    height: auto;
-    object-fit: cover;
-  }
+.video {
+  width: 1280px;
+  height: auto;
+  object-fit: cover;
+}
 
-  .container2 {
-    width: 100%;
-    max-width: none;
-  }
+.container2 {
+  width: 100%;
+  max-width: none;
+}
 
 figure {
-    display: inline-block;
-    margin: 0; 
-    vertical-align: middle;
+  display: inline-block;
+  margin: 0;
+  vertical-align: middle;
 }
 
 figcaption {
-    text-align: left; 
-    font-style: italic;
-    margin-left: 2px;
-    margin-right: 2px;
-    margin-top: 5px;
-    margin-bottom: 25px;
+  text-align: left;
+  font-style: italic;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-top: 5px;
+  margin-bottom: 25px;
 }
 
 .subcaption-container {
-  display: flex;                 /* Treat the figcaption as a flex container */
-  justify-content: space-evenly; /* Distribute items evenly along the main axis */
-                                 /* Alternatives: space-between, space-around */
-  align-items: flex-start;       /* Align items at the top if they wrap */
-  margin-top: 8px;               /* Add some space between the image and subcaptions */
-  width: 100%;                   /* Ensure the container uses the full figure width */
-  text-align: center;            /* Center text within each span */
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  margin-top: 8px;
+  width: 100%;
+  text-align: center;
   margin-bottom: 5px;
-
 }
