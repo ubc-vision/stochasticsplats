@@ -5,7 +5,6 @@ body {
 }
 
 .tbl_video {
-    width: 80%;
     margin: 0 auto;
     text-align: center;
 }
@@ -294,7 +293,6 @@ a:hover {
   text-align: center;
 }
 .parent-video-compare-container {
-  width: 80%;
   justify-content: center;
 }
 .double-arrow {

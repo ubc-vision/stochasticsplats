@@ -149,11 +149,11 @@
             </span>
           </div>
         </div>
-    <div class="container">
+    <div class="container"  style="width: 80%;">
         <hr>
         <br>
         <!-- <img style="width: 80%;" src="resources/images/teaser.png" alt="Teaser figure." /> -->
-        <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay
+        <video class="vid_demo" width="100%" preload="auto" playsinline webkit-playsinline loop autoplay controls
                 muted>
             <source src="resources/teaser/concatenated_output.mp4" type="video/mp4">
         </video>
@@ -161,7 +161,7 @@
         <br>
         <hr>
         <h1>Abstract</h1>
-        <p style="width: 80%;">
+        <p>
             3D Gaussian splatting(3DGS) is a popular radiance field method, with many application-specific extensions. Most variants rely on the same core algorithm: depth-sorting of Gaussian splats then rasterizing in primitive order. This ensures correct alpha compositing, but can cause rendering artifacts due to built-in approximations.
             Moreover, for a fixed representation, sorted rendering offers little control over render cost and visual fidelity.
             For example, and counter-intuitively, rendering a lower-resolution image is not necessarily faster.
@@ -190,12 +190,12 @@
         </p>
         <div class="row">
 
-            <figure style="width: 45%;">
+            <figure style="width: 49%;">
                 <img src="resources/images/st_intro.png" alt="Stochastic transparency introduction" style="width: 100%; display: block;" />
                 <figcaption><b>Blending vs. stochastic</b> - We visualize a 1D and 3D example of the different ways to compute transparency. Two foreground Gaussians are composited on a white background.</figcaption>
             </figure>
 
-            <figure style="width: 45%;">
+            <figure style="width: 49%;">
                 <img src="resources/images/pseudocode.png" alt="Stochastic transparency pseudocode" style="width: 100%; display: block;" />
                 <figcaption> <b>Pseudocode for stochastic transparency</b> - We denote \(\alpha_i\) the opacity, \(z_i\) the depth and \(c_i\) the color of of Gaussian \(i\).</figcaption>
             </figure>
@@ -221,7 +221,7 @@
             Stochastic transparency further enables both <i>pop-free</i> rendering. Similar to StopThePop [Radl et al. 2024], we can approximate the depth of a Gaussian as a (view-dependent) surface. We propose to use a simple plane-approximation, that is a good fit for the GPU rasterization pipeline (unlike StopThePop's curved surface). Moreover, stochastic transparency allows full 3D <i>intermixing</i> of 3D Gaussians. We showcase both the plane-approximation and full intermixing in the following:
         </p>
         <div class="row">
-            <figure style="width: 45%;">
+            <figure style="width: 49%;">
                 <img src="resources/images/popfree.png" alt="popfree rendering by plane approximation" style="width: 100%; display: block;" />
                 <figcaption class="subcaption-container">
                     <span>3DGSg</span>
@@ -237,7 +237,7 @@ that per-fragment depth z can be computed efficiently in hardware
                     .</figcaption>
             </figure>
 
-            <figure style="width: 45%;">
+            <figure style="width: 49%;">
                 <img src="resources/images/intermixing.png" alt="Comparison of sorting, pop-free rendering and 3D intermixing" style="width: 100%; display: block;" />
                 <figcaption class="subcaption-container">
                     <span>Alpha blending</span>
@@ -265,12 +265,10 @@ that per-fragment depth z can be computed efficiently in hardware
             <p>
                 This comparison showcases a trajectory in the Garden scene from the MipNerf360 dataset being rendered using StochasticSplats and 3DGS. Use the slider to see how the fine-tuned StochasticSplats effectively removes the popping artifact. Pay close attention to the metal surface of the table for a clear visual difference.
             </p>
-
-
         </div>
         <hr>
         <h1>Using 1 Sample-Per-Pixel (SPP) <strong>without</strong> Temporal Anti-Aliasing (TAA)</h1>
-        <p style="width: 80%; margin: 0 auto;">These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
+        <p>These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
         <table class="tbl_video">
             <!-- Text Above Each Pair -->
             <tr>
@@ -289,7 +287,7 @@ that per-fragment depth z can be computed efficiently in hardware
         </table>
         <hr>
         <h1>Using 1 Sample-Per-Pixel (SPP) <strong>with</strong> Temporal Anti-Aliasing (TAA)</h1>
-        <p style="width: 80%; margin: 0 auto;">These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
+        <p>These scenes from the MipNerf360 dataset are rendered on a Windows laptop equipped with an NVIDIA Quadro T1000 Max-Q GPU using our OpenGL implementation. We recorded the screen using the NVIDIA app.</p>
         <table class="tbl_video">
             <!-- Text Above Each Pair -->
             <tr>
