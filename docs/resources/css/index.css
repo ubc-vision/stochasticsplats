@@ -351,6 +351,7 @@ img.copy-icon {
   cursor: pointer;
   height: 1.5em;
   width: auto;
+  user-select: none;
 }
 
 img.copy-icon:hover {
