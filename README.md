@@ -29,3 +29,21 @@ Welcome to the StochasticSplats project repository!
 
 
 # Code coming soon!
+
+## Overview
+
+This repository builds upon and extends the capabilities of [Splatapult](https://github.com/hyperlogic/splatapult), a 3D Gaussian splats viewer. StochasticSplats introduces stochastic rasterization methods enabling sorting-free 3D Gaussian splatting.
+
+For a detailed explanation of controls and features, please refer to the [original README](https://github.com/hyperlogic/splatapult#readme).
+
+## Citation
+
+If you utilize StochasticSplats in your research, please cite our ICCV 2025 paper:
+
+```bibtex
+@inproceedings{kheradmandvicini2025stochasticsplats,
+  title={StochasticSplats: Stochastic Rasterization for Sorting-Free 3D Gaussian Splatting},
+  author={Kheradmand, Shakiba and Vicini, Delio and Kopanas, George and Lagun, Dmitry and Yi, Kwang Moo and Matthews, Mark and Tagliasacchi, Andrea},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year={2025}
+}
