@@ -13,6 +13,7 @@
 #include <SDL2/SDL_syswm.h>
 #include <stdint.h>
 #include <thread>
+#include <string>
 
 #ifdef TRACY_ENABLE
 #include <tracy/Tracy.hpp>
@@ -69,14 +70,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    const int32_t WIDTH = 1024;
-    const int32_t HEIGHT = 768;
+    const int32_t WIDTH = app.GetCustomWidth();
+    const int32_t HEIGHT = app.GetCustomHeight();
 
     // Allow us to use automatic linear->sRGB conversion.
     SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
 
     // increase depth buffer size
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    // specify sample size
+    std::string renderMode = app.GetRenderMode();
+    if (renderMode != "AB") {
+      if (app.GetSampleCount() > 1) {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, app.GetSampleCount());
+      }
+    }
 
     uint32_t windowFlags = SDL_WINDOW_OPENGL;
     if (app.IsFullscreen())

@@ -1,6 +1,8 @@
 /*
     Copyright (c) 2024 Anthony J. Thibault
     This software is licensed under the MIT License. See LICENSE for more details.
+
+     Edited by Shakiba Kheradmand, 2025
 */
 
 //
@@ -13,8 +15,8 @@
 
 uniform mat4 viewMat;  // used to project position into view coordinates.
 uniform mat4 projMat;  // used to project view coordinates into clip coordinates.
-uniform vec4 projParams;  // x = HEIGHT / tan(FOVY / 2), y = Z_NEAR, z = Z_FAR
-uniform vec4 viewport;  // x, y, WIDTH, HEIGHT
+uniform vec3 projParams;  // x = HEIGHT / tan(FOVY / 2), y = Z_NEAR, z = Z_FAR
+//uniform vec4 viewport;  // x, y, WIDTH, HEIGHT
 uniform vec3 eye;
 
 in vec4 position;  // center of the gaussian in object coordinates, (with alpha crammed in to w)
@@ -45,7 +47,8 @@ in vec3 cov3_col1;
 in vec3 cov3_col2;
 
 out vec4 geom_color;  // radiance of splat
-out vec4 geom_cov2;  // 2D screen space covariance matrix of the gaussian
+out vec3 geom_cov2inv;  // 2D screen space covariance matrix of the gaussian
+out vec4 geom_uv;
 out vec2 geom_p;  // the 2D screen space center of the gaussian, (z is alpha)
 
 vec3 ComputeRadianceFromSH(const vec3 v)
@@ -104,7 +107,8 @@ vec3 ComputeRadianceFromSH(const vec3 v)
     b[14] = k9 * v.z * (vx2 - vy2);
     b[15] = -k5 * v.x * (vx2 - 3.0f * vy2);
 
-    float re = (b[0] * r_sh0.x + b[1] * r_sh0.y + b[2] * r_sh0.z + b[3] * r_sh0.w +
+    float re =
+        (b[0] * r_sh0.x + b[1] * r_sh0.y + b[2] * r_sh0.z + b[3] * r_sh0.w +
                 b[4] * r_sh1.x + b[5] * r_sh1.y + b[6] * r_sh1.z + b[7] * r_sh1.w +
                 b[8] * r_sh2.x + b[9] * r_sh2.y + b[10]* r_sh2.z + b[11]* r_sh2.w +
                 b[12]* r_sh3.x + b[13]* r_sh3.y + b[14]* r_sh3.z + b[15]* r_sh3.w);
@@ -123,7 +127,11 @@ vec3 ComputeRadianceFromSH(const vec3 v)
     float gr = (b[0] * g_sh0.x + b[1] * g_sh0.y + b[2] * g_sh0.z + b[3] * g_sh0.w);
     float bl = (b[0] * b_sh0.x + b[1] * b_sh0.y + b[2] * b_sh0.z + b[3] * b_sh0.w);
 #endif
-    return vec3(0.5f, 0.5f, 0.5f) + vec3(re, gr, bl);
+    re = clamp(re + 0.5f, 0.0f, 1.0f);
+    gr = clamp(gr + 0.5f, 0.0f, 1.0f);
+    bl = clamp(bl + 0.5f, 0.0f, 1.0f);
+
+    return vec3(re, gr, bl);
 }
 
 #ifdef FRAMEBUFFER_SRGB
@@ -150,32 +158,38 @@ vec3 SRGBToLinear(const vec3 srgbColor)
 }
 #endif
 
+mat2 inverseMat2(mat2 m) {
+  float invdet = 1.0f / (m[0][0] * m[1][1] - m[0][1] * m[1][0]);
+  mat2 inv;
+  inv[0][0] = m[1][1] * invdet;
+  inv[0][1] = -m[0][1] * invdet;
+  inv[1][0] = -m[1][0] * invdet;
+  inv[1][1] = m[0][0] * invdet;
+
+  return inv;
+}
+
 void main(void)
 {
     // t is in view coordinates
     float alpha = position.w;
-    vec4 t = viewMat * vec4(position.xyz, 1.0f);
+    vec4 positionInView = viewMat * vec4(position.xyz, 1.0f);
+    vec4 positionInScreen = projMat * positionInView;
 
-    //float X0 = viewport.x;
-    float X0 = viewport.x * (0.00001f * projParams.y);  // one weird hack to prevent projParams from being compiled away
-    float Y0 = viewport.y;
-    float WIDTH = viewport.z;
-    float HEIGHT = viewport.w;
-    float Z_NEAR = projParams.y;
-    float Z_FAR = projParams.z;
+    float WIDTH = projParams.x;
+    float HEIGHT = projParams.y;
 
     // J is the jacobian of the projection and viewport transformations.
     // this is an affine approximation of the real projection.
     // because gaussians are closed under affine transforms.
-    float SX = projMat[0][0];
-    float SY = projMat[1][1];
-    float WZ =  projMat[3][2];
-    float tzSq = t.z * t.z;
-    float jsx = -(SX * WIDTH) / (2.0f * t.z);
-    float jsy = -(SY * HEIGHT) / (2.0f * t.z);
-    float jtx = (SX * t.x * WIDTH) / (2.0f * tzSq);
-    float jty = (SY * t.y * HEIGHT) / (2.0f * tzSq);
-    float jtz = ((Z_FAR - Z_NEAR) * WZ) / (2.0f * tzSq);
+    float SX = projMat[0][0] * WIDTH;
+    float SY = projMat[1][1] * HEIGHT;
+    float tzSq = positionInView.z * positionInView.z;
+    float jsx = -SX / (2.0f * positionInView.z);
+    float jsy = -SY / (2.0f * positionInView.z);
+    float jtx = (SX * positionInView.x) / (2.0f * tzSq);
+    float jty = (SY * positionInView.y) / (2.0f * tzSq);
+    float jtz = projParams.z / (2.0f * tzSq);
     mat3 J = mat3(vec3(jsx, 0.0f, 0.0f),
                   vec3(0.0f, jsy, 0.0f),
                   vec3(jtx, jty, jtz));
@@ -194,17 +208,48 @@ void main(void)
     // of their covariance matrices to apply a low-pass filter to anti-alias the splats
     cov2D[0][0] += 0.3f;
     cov2D[1][1] += 0.3f;
-    geom_cov2 = vec4(cov2D[0], cov2D[1]); // cram it into a vec4
+
+    // compute 2d extents for the splat, using covariance matrix ellipse
+    // see https://cookierobotics.com/007/
+    float k = max(min(2 * log(255.0f * alpha), 9.0f), 0.0f);
+    float a = cov2D[0][0];
+    float b = cov2D[0][1];
+    float c = cov2D[1][1];
+    float apco2 = (a + c) / 2.0f;
+    float amco2 = (a - c) / 2.0f;
+    float term = sqrt(amco2 * amco2 + b * b);
+    float maj = apco2 + term;
+    float min = apco2 - term;
+
+    float theta;
+    if (b == 0.0f) {
+      theta = (a >= c) ? 0.0f : radians(90.0f);
+    } else {
+      theta = atan(maj - a, b);
+    }
+
+    float r1 = sqrt(maj * k);
+    float r2 = sqrt(min * k);
+    vec2 u1 = vec2(cos(theta), sin(theta));
+    vec2 u2 = vec2(-sin(theta), cos(theta));
+    geom_uv = vec4(r1 * u1, r2 * u2);
+
+    mat2 cov2Dinv = inverseMat2(cov2D);
+    geom_cov2inv = vec3(cov2Dinv[0][0], cov2Dinv[0][1], cov2Dinv[1][1]);
+
 
     // geom_p is the gaussian center transformed into screen space
-    vec4 p4 = projMat * t;
-    geom_p = vec2(p4.x / p4.w, p4.y / p4.w);
-    geom_p.x = 0.5f * (WIDTH + (geom_p.x * WIDTH) + (2.0f * X0));
-    geom_p.y = 0.5f * (HEIGHT + (geom_p.y * HEIGHT) + (2.0f * Y0));
+    //positionInScreen.x = positionInScreen.x / positionInScreen.w;
+    //positionInScreen.y = positionInScreen.y / positionInScreen.w;
+    geom_p = vec2(positionInScreen.x / positionInScreen.w,
+                  positionInScreen.y / positionInScreen.w);
+    geom_p.x = 0.5f * WIDTH  * (1.0f + geom_p.x);
+    geom_p.y = 0.5f * HEIGHT * (1.0f + geom_p.y);
 
     // compute radiance from sh
     vec3 v = normalize(position.xyz - eye);
     geom_color = vec4(ComputeRadianceFromSH(v), alpha);
+    
 
 #ifdef FRAMEBUFFER_SRGB
     // The SIBR reference renderer uses sRGB throughout,
@@ -218,5 +263,5 @@ void main(void)
 #endif
 
     // gl_Position is in clip coordinates.
-    gl_Position = p4;
+    gl_Position = positionInScreen;
 }

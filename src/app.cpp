@@ -291,6 +291,49 @@ App::ParseResult App::ParseArguments(int argc, const char* argv[])
         argc--;
         argv++;
     }
+    for (int i = 1; i < argc; i++) {
+      if (strcmp(argv[i], "--samples") == 0 && i + 1 < argc) {
+        sampleCount = atoi(argv[i + 1]);
+        i++; // skip the next argument
+        continue;
+      }
+      if (strcmp(argv[i], "--width") == 0 && i + 1 < argc) {
+        customWidth = atoi(argv[i + 1]);
+        i++; // skip the next argument
+        continue;
+      }
+      if (strcmp(argv[i], "--height") == 0 && i + 1 < argc) {
+        customHeight = atoi(argv[i + 1]);
+        i++; // skip the next argument
+        continue;
+      }
+
+      const std::vector<std::string> validRenderModes = {
+        "ST",
+        "ST-popfree",
+        "AB"
+      };
+
+      if (strcmp(argv[i], "--render_mode") == 0 && i + 1 < argc) {
+        std::string mode = argv[i + 1];
+        // Check if mode is in validRenderModes
+        if (std::find(validRenderModes.begin(), validRenderModes.end(), mode) == validRenderModes.end()) {
+          std::cerr << "Error: Invalid value for --render_mode: " << mode << std::endl;
+          std::cerr << "Valid options are:";
+          for (const auto& opt : validRenderModes) std::cerr << " " << opt;
+          std::cerr << std::endl;
+          exit(EXIT_FAILURE);
+        }
+        opt.renderMode = mode;
+        i++;
+        continue;
+      }
+      if (strcmp(argv[i], "--taa") == 0) {
+        opt.taa = true;
+        continue;
+      }
+
+    }
     option::Stats stats(usage, argc, argv);
     std::vector<option::Option> options(stats.options_max);
     std::vector<option::Option> buffer(stats.buffer_max);
@@ -552,7 +595,7 @@ bool App::Init()
 #else
     bool useRgcSortOverride = false;
 #endif
-    if (!splatRenderer->Init(gaussianCloud, isFramebufferSRGBEnabled, useRgcSortOverride))
+    if (!splatRenderer->Init(gaussianCloud, isFramebufferSRGBEnabled, useRgcSortOverride, GetRenderMode()))
     {
         Log::E("Error initializing splat renderer!\n");
         return false;
@@ -1098,3 +1141,5 @@ void App::OnResize(const ResizeCallback& cb)
 {
     resizeCallback = cb;
 }
+
+

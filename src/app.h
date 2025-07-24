@@ -50,6 +50,13 @@ public:
     void ProcessEvent(const SDL_Event& event);
     bool Process(float dt);
     bool Render(float dt, const glm::ivec2& windowSize);
+    int GetSampleCount() const { return sampleCount; }
+    void SetSampleCount(int count) { sampleCount = count; }
+    int GetCustomWidth() const { return customWidth; }
+    int GetCustomHeight() const { return customHeight; }
+    void SetCustomWidth(int width) { customWidth = width; }
+    void SetCustomHeight(int height) { customHeight = height; }
+    std::string GetRenderMode() const { return opt.renderMode; }
 
     using VoidCallback = std::function<void()>;
     void OnQuit(const VoidCallback& cb);
@@ -76,6 +83,8 @@ public:
         bool drawCameraFrustums = false;
         bool drawCameraPath = false;
         bool importFullSH = true;
+        std::string renderMode = "ST";
+        bool taa = false;
     };
 
 protected:
@@ -119,4 +128,8 @@ protected:
     ResizeCallback resizeCallback;
 
     std::vector<float> fpsVec;
+
+    int sampleCount = 1;
+    int customWidth = 1296;
+    int customHeight = 840;
 };

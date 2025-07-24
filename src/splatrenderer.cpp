@@ -48,13 +48,17 @@ SplatRenderer::~SplatRenderer()
 }
 
 bool SplatRenderer::Init(std::shared_ptr<GaussianCloud> gaussianCloud,
-                         bool isFramebufferSRGBEnabledIn, bool useRgcSortOverrideIn)
+                         bool isFramebufferSRGBEnabledIn, bool useRgcSortOverrideIn,
+                         std::string renderMode)
 {
     ZoneScopedNC("SplatRenderer::Init()", tracy::Color::Blue);
     GL_ERROR_CHECK("SplatRenderer::Init() begin");
 
     isFramebufferSRGBEnabled = isFramebufferSRGBEnabledIn;
     useRgcSortOverride = useRgcSortOverrideIn;
+    bool useMultiRadixSort = GLEW_KHR_shader_subgroup && !useRgcSortOverride;
+    numGaussians = gaussianCloud->GetNumGaussians();
+    this->renderMode = renderMode;
 
     splatProg = std::make_shared<Program>();
     if (isFramebufferSRGBEnabled || gaussianCloud->HasFullSH())
@@ -70,81 +74,98 @@ bool SplatRenderer::Init(std::shared_ptr<GaussianCloud> gaussianCloud,
         }
         splatProg->AddMacro("DEFINES", defines);
     }
-    if (!splatProg->LoadVertGeomFrag("shader/splat_vert.glsl", "shader/splat_geom.glsl", "shader/splat_frag.glsl"))
-    {
+    if (renderMode == "AB"){
+        if (!splatProg->LoadVertGeomFrag("shader/splat_vert.glsl", 
+            "shader/splat_geom.glsl", "shader/splat_frag.glsl"))
+        {
+            Log::E("Error loading splat shaders!\n");
+            return false;
+        }
+
+        preSortProg = std::make_shared<Program>();
+        if (!preSortProg->LoadCompute("shader/presort_compute.glsl"))
+        {
+            Log::E("Error loading pre-sort compute shader!\n");
+            return false;
+        }
+
+        if (useMultiRadixSort)
+        {
+            sortProg = std::make_shared<Program>();
+            if (!sortProg->LoadCompute("shader/multi_radixsort.glsl"))
+            {
+                Log::E("Error loading sort compute shader!\n");
+                return false;
+            }
+
+            histogramProg = std::make_shared<Program>();
+            if (!histogramProg->LoadCompute("shader/multi_radixsort_histograms.glsl"))
+            {
+                Log::E("Error loading histogram compute shader!\n");
+                return false;
+            }
+        }
+        // build posVec
+        posVec.reserve(numGaussians);
+        gaussianCloud->ForEachPosWithAlpha([this](const float* pos)
+        {
+            posVec.emplace_back(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
+        });
+        depthVec.resize(numGaussians);
+    } 
+    else if (renderMode == "ST") {
+      if (!splatProg->LoadVertGeomFrag("shader/splat_vert.glsl",
+        "shader/splat_geom.glsl",
+        "shader/splat_frag_ST.glsl")) {
+        Log::E("Error loading splat shaders!\n");
+        return false; 
+      }
+    }
+    else if (renderMode == "ST-popfree") {
+      if (!splatProg->LoadVertGeomFrag("shader/splat_vert_ST_popfree.glsl",
+        "shader/splat_geom_ST_popfree.glsl",
+        "shader/splat_frag_ST.glsl")) {
         Log::E("Error loading splat shaders!\n");
         return false;
+      }
     }
-
-    preSortProg = std::make_shared<Program>();
-    if (!preSortProg->LoadCompute("shader/presort_compute.glsl"))
-    {
-        Log::E("Error loading pre-sort compute shader!\n");
-        return false;
-    }
-
-    bool useMultiRadixSort = GLEW_KHR_shader_subgroup && !useRgcSortOverride;
-
-    if (useMultiRadixSort)
-    {
-        sortProg = std::make_shared<Program>();
-        if (!sortProg->LoadCompute("shader/multi_radixsort.glsl"))
-        {
-            Log::E("Error loading sort compute shader!\n");
-            return false;
-        }
-
-        histogramProg = std::make_shared<Program>();
-        if (!histogramProg->LoadCompute("shader/multi_radixsort_histograms.glsl"))
-        {
-            Log::E("Error loading histogram compute shader!\n");
-            return false;
-        }
-    }
-
-    // build posVec
-    size_t numGaussians = gaussianCloud->GetNumGaussians();
-    posVec.reserve(numGaussians);
-    gaussianCloud->ForEachPosWithAlpha([this](const float* pos)
-    {
-        posVec.emplace_back(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
-    });
 
     BuildVertexArrayObject(gaussianCloud);
 
-    depthVec.resize(numGaussians);
+    if (renderMode == "AB") {
+        depthVec.resize(numGaussians);
 
-    if (useMultiRadixSort)
-    {
-        Log::I("using multi_radixsort.glsl\n");
+        if (useMultiRadixSort)
+        {
+            Log::I("using multi_radixsort.glsl\n");
 
-        keyBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, depthVec, GL_DYNAMIC_STORAGE_BIT);
-        keyBuffer2 = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, depthVec, GL_DYNAMIC_STORAGE_BIT);
+            keyBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, depthVec, GL_DYNAMIC_STORAGE_BIT);
+            keyBuffer2 = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, depthVec, GL_DYNAMIC_STORAGE_BIT);
 
-        const uint32_t NUM_ELEMENTS = static_cast<uint32_t>(numGaussians);
-        const uint32_t NUM_WORKGROUPS = (NUM_ELEMENTS + numBlocksPerWorkgroup - 1) / numBlocksPerWorkgroup;
-        const uint32_t RADIX_SORT_BINS = 256;
+            const uint32_t NUM_ELEMENTS = static_cast<uint32_t>(numGaussians);
+            const uint32_t NUM_WORKGROUPS = (NUM_ELEMENTS + numBlocksPerWorkgroup - 1) / numBlocksPerWorkgroup;
+            const uint32_t RADIX_SORT_BINS = 256;
 
-        std::vector<uint32_t> histogramVec(NUM_WORKGROUPS * RADIX_SORT_BINS, 0);
-        histogramBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, histogramVec, GL_DYNAMIC_STORAGE_BIT);
+            std::vector<uint32_t> histogramVec(NUM_WORKGROUPS * RADIX_SORT_BINS, 0);
+            histogramBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, histogramVec, GL_DYNAMIC_STORAGE_BIT);
 
-        valBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, indexVec, GL_DYNAMIC_STORAGE_BIT);
-        valBuffer2 = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, indexVec, GL_DYNAMIC_STORAGE_BIT);
-        posBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, posVec);
+            valBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, indexVec, GL_DYNAMIC_STORAGE_BIT);
+            valBuffer2 = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, indexVec, GL_DYNAMIC_STORAGE_BIT);
+            posBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, posVec);
+        }
+        else
+        {
+            Log::I("using rgc::radix_sort\n");
+            keyBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, depthVec, GL_DYNAMIC_STORAGE_BIT);
+            valBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, indexVec, GL_DYNAMIC_STORAGE_BIT);
+            posBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, posVec);
+
+            sorter = std::make_shared<rgc::radix_sort::sorter>(numGaussians);
+        }
+    
+        atomicCounterVec.resize(1, 0);
+        atomicCounterBuffer = std::make_shared<BufferObject>(GL_ATOMIC_COUNTER_BUFFER, atomicCounterVec, GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT);
     }
-    else
-    {
-        Log::I("using rgc::radix_sort\n");
-        keyBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, depthVec, GL_DYNAMIC_STORAGE_BIT);
-        valBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, indexVec, GL_DYNAMIC_STORAGE_BIT);
-        posBuffer = std::make_shared<BufferObject>(GL_SHADER_STORAGE_BUFFER, posVec);
-
-        sorter = std::make_shared<rgc::radix_sort::sorter>(numGaussians);
-    }
-
-    atomicCounterVec.resize(1, 0);
-    atomicCounterBuffer = std::make_shared<BufferObject>(GL_ATOMIC_COUNTER_BUFFER, atomicCounterVec, GL_DYNAMIC_STORAGE_BIT | GL_MAP_READ_BIT);
-
     GL_ERROR_CHECK("SplatRenderer::Init() end");
 
     return true;
@@ -153,6 +174,8 @@ bool SplatRenderer::Init(std::shared_ptr<GaussianCloud> gaussianCloud,
 void SplatRenderer::Sort(const glm::mat4& cameraMat, const glm::mat4& projMat,
                          const glm::vec4& viewport, const glm::vec2& nearFar)
 {
+    if (renderMode != "AB")   return;
+
     ZoneScoped;
 
     GL_ERROR_CHECK("SplatRenderer::Sort() begin");
@@ -323,19 +346,28 @@ void SplatRenderer::Render(const glm::mat4& cameraMat, const glm::mat4& projMat,
         ZoneScopedNC("draw", tracy::Color::Red4);
         float width = viewport.z;
         float height = viewport.w;
-        float aspectRatio = width / height;
         glm::mat4 viewMat = glm::inverse(cameraMat);
         glm::vec3 eye = glm::vec3(cameraMat[3]);
+        float multiplier = (nearFar.x - nearFar.y) * projMat[3][2];
 
         splatProg->Bind();
         splatProg->SetUniform("viewMat", viewMat);
         splatProg->SetUniform("projMat", projMat);
-        splatProg->SetUniform("viewport", viewport);
-        splatProg->SetUniform("projParams", glm::vec4(0.0f, nearFar.x, nearFar.y, 0.0f));
+        splatProg->SetUniform("projParams", glm::vec3(width, height, multiplier));
         splatProg->SetUniform("eye", eye);
 
+        if (renderMode != "AB") {
+            uint32_t randomSeed = rand();
+            splatProg->SetUniform("u_randomSeed", randomSeed);
+        }
+
         splatVao->Bind();
-        glDrawElements(GL_POINTS, sortCount, GL_UNSIGNED_INT, nullptr);
+        if (renderMode == "AB") {
+            glDrawElements(GL_POINTS, sortCount, GL_UNSIGNED_INT, nullptr);
+        }
+        else {
+            glDrawElements(GL_POINTS, (GLsizei)numGaussians, GL_UNSIGNED_INT, nullptr);
+        }
         splatVao->Unbind();
 
         GL_ERROR_CHECK("SplatRenderer::Render() draw");

@@ -1,68 +1,117 @@
-Windows Build (vcpkg submodule)
------------------------
-* Install Visual Studio 2022
-* Install cmake 3.27.1
-* Ensure splatapult has the vcpkg submodule.
-  Either clone with the --recursive flag so that the vcpkg submodule is added
-  or execute `git submodule init` and `git submodule update` after a regular clone.
-* Bootstrap vcpkg
-  - `cd vcpkg`
-  - `bootstrap-vcpg.bat`
-* Execute cmake to create a Visual Studio solution file
-  - `mkdir build`
-  - `cd build`
-  - `cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake`
-* Build exe by using Visual Studio by loading splatapult.sln or from the command line:
-  - `cmake --build . --config=Release`
+# Build Instructions
 
-Windows Shipping Builds
--------------------------
-The SHIPPING cmake option is used to create a release version of splataplut.
-A post build step will copy all of the the data folders (font, shader, texture) into the build directory.
-And the resulting exe will use that copy.  You can then zip up the folder and distrubute it to users.
+## Windows Build (with vcpkg)
 
-* To create a shipping build:
-    - `mkdir build`
-    - `cd build`
-    - `cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake -DSHIPPING=ON`
-    - `cmake --build . --config=Release`
+### Prerequisites
+- **Visual Studio 2022** (Community Edition is fine)
+- **CMake 3.27.1** or newer
 
-Linux Build (vcpkg submodule)
---------------------
-* Install dependencies
-  - `sudo apt-get install clang`
-  - `sudo apt-get install cmake`
-  - `sudo apt-get install freeglut3-dev`
-  - `sudo apt-get install libopenxr-dev`
-* Ensure splatapult has the vcpkg submodule.
-  Either clone with the --recursive flag so that the vcpkg submodule is added
-  or execute `git submodule init` and `git submodule update` after a regular clone.
-* Bootstrap vcpkg
-  - `cd vcpkg`
-  - `bootstrap-vcpg.sh`
-* Execute cmake to create a Makefile
-  - `mkdir build`
-  - `cd build`
-  - `cmake .. -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake`
-* build executable
-  - `cmake --build . --config=Release`
+### 1. Clone the repository with vcpkg submodule
+- Recommended: `git clone --recursive <repo-url>`
+- If you already cloned, run:
+  ```sh
+  git submodule init
+  git submodule update
+  ```
 
-*EXPERIMENTAL* Meta Quest Build (OUT OF DATE)
---------------------
-NOTE: Although the quest build functions it is much to slow for most scenes.
-A Quest2 headset can only run a scene consisting of 25k splats.
+### 2. Bootstrap vcpkg and install dependencies
+```sh
+cd vcpkg
+bootstrap-vcpkg.bat
+vcpkg install
+```
 
-* Use vcpkg to install the following packages:
-    - `vcpkg install glm:arm64-android`
-    - `vcpkg install libpng:arm64-android`
-    - `vcpkg install nlohmann-json:arm64-android`
-* Set the following environment var ANDROID_VCPKG_DIR to point to vcpkg/installed/arm64-android.
-* Download the [Meta OpenXR Mobile SDK 59.0](https://developer.oculus.com/downloads/package/oculus-openxr-mobile-sdk/)
-* Install [Android Studio Bumble Bee, Patch 3](https://developer.android.com/studio/archive)
-  newer versions do not work with Meta OpenXR Mobile SDK 59.0.
-  Follow this guide to setup [Android Studio](https://developer.oculus.com/documentation/native/android/mobile-studio-setup-android/)
-* Copy the ovr_openxr_mobile_sdk_59.0 dir into the meta-quest dir.
-* Copy the meta-quest/splatapult dir to ovr_openxr_mobile_sdk_59.0/XrSamples/splataplut
-* Open the ovr_openxr_mobile_sdk_59.0/XrSamples/splatapult in AndroidStudio.
-* Sync and Build
+### 3. Configure the project with CMake
+```sh
+cd ..
+mkdir build
+cd build
+# You may need to provide the absolute path to the toolchain file
+cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+> **Tip:** If you get errors about not finding the toolchain file, try using the absolute path.
+
+### 4. Build the executable
+- Open `splatapult.sln` in Visual Studio and build, **or**
+- From the command line:
+  ```sh
+  cmake --build . --config=Release
+  ```
+
+---
+
+## Windows Shipping Builds
+
+To create a release (shipping) build:
+```sh
+mkdir build
+cd build
+cmake .. -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake -DSHIPPING=ON
+cmake --build . --config=Release
+```
+- The build will copy all required data folders (`font`, `shader`, `texture`) into the build directory.
+- The resulting folder can be zipped and distributed to users.
+
+---
+
+## Linux Build (with vcpkg)
+
+### Prerequisites
+- `clang`
+- `cmake`
+- `freeglut3-dev`
+- `libopenxr-dev`
+
+Install dependencies:
+```sh
+sudo apt-get install clang cmake freeglut3-dev libopenxr-dev
+```
+
+### 1. Clone the repository with vcpkg submodule
+- See Windows instructions above.
+
+### 2. Bootstrap vcpkg
+```sh
+cd vcpkg
+./bootstrap-vcpkg.sh
+```
+
+### 3. Configure and build
+```sh
+cd ..
+mkdir build
+cd build
+cmake .. -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build . --config=Release
+```
+
+---
+
+## Meta Quest Build (Experimental, Out of Date)
+> **Note:** The Quest build is experimental and slow for large scenes (max ~25k splats).
+
+### Steps
+1. Use vcpkg to install:
+   ```sh
+   vcpkg install glm:arm64-android libpng:arm64-android nlohmann-json:arm64-android
+   ```
+2. Set the `ANDROID_VCPKG_DIR` environment variable to point to `vcpkg/installed/arm64-android`.
+3. Download the [Meta OpenXR Mobile SDK 59.0](https://developer.oculus.com/downloads/package/oculus-openxr-mobile-sdk/).
+4. Install [Android Studio Bumble Bee, Patch 3](https://developer.android.com/studio/archive) (newer versions may not work).
+   - Follow the [Meta guide](https://developer.oculus.com/documentation/native/android/mobile-studio-setup-android/).
+5. Copy the `ovr_openxr_mobile_sdk_59.0` directory into `meta-quest`.
+6. Copy `meta-quest/splatapult` to `ovr_openxr_mobile_sdk_59.0/XrSamples/splatapult`.
+7. Open in Android Studio, sync, and build.
+
+---
+
+## Troubleshooting
+- If CMake cannot find the vcpkg toolchain, use the **absolute path**.
+- If dependencies are missing, ensure you ran `vcpkg install` after editing `vcpkg.json`.
+- For Windows, always use forward slashes (`/`) in CMake paths.
+- If you have multiple vcpkg folders, make sure you are using the correct one for your project.
+
+---
+
+Happy building!
 

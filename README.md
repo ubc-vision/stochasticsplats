@@ -28,22 +28,57 @@ Welcome to the StochasticSplats project repository!
 </div>
 
 
-# Code coming soon!
-
 ## Overview
 
 This repository builds upon and extends the capabilities of [Splatapult](https://github.com/hyperlogic/splatapult), a 3D Gaussian splats viewer. StochasticSplats introduces stochastic rasterization methods enabling sorting-free 3D Gaussian splatting.
 
 For a detailed explanation of controls and features, please refer to the [original README](https://github.com/hyperlogic/splatapult#readme).
 
+
+## 🚀 How to Run
+
+To run StochasticSplats, follow these steps:
+
+### 1. Prepare Your Scene
+Ensure your scene is in the standard 3D Gaussian Splatting format, which consists of a directory containing:
+- `cameras.json`
+- A `pointcloud/` subdirectory with the point cloud data.
+
+### 2. Run the Viewer
+Execute the viewer from your build directory, providing the path to your scene.
+
+**Command Syntax:**
+```sh
+splatapult.exe [path/to/scene] [options]
+./build/splatapult [path/to/scene] [options]
+```
+
+**Example:**
+```sh
+splatapult.exe path/to/my/scene --render_mode ST --width 1920 --height 1080
+```
+
+### Command-Line Options
+The following table details the available command-line arguments:
+
+| Option          | Description                                                                                                                                                                                       | Default |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------:|
+| `--width`       | Sets the width of the application window.                                                                                                                                                         | `1296`  |
+| `--height`      | Sets the height of the application window.                                                                                                                                                        | `840`   |
+| `--render_mode` | Specifies the rendering mode.<ul><li>`AB`: Alpha Blending</li><li>`ST`: Stochastic Rendering (for original 3DGS scenes)</li><li>`ST-popfree`: Pop-free Stochastic Rendering (for scenes trained/finetuned using our method)</li></ul> | `AB`    |
+| `--samples`     | Defines the number of samples for stochastic modes. The maximum value depends on your hardware.                                                                                                   |  `1`    |
+
+
 ## Citation
 
 If you utilize StochasticSplats in your research, please cite our ICCV 2025 paper:
 
 ```bibtex
-@inproceedings{kheradmandvicini2025stochasticsplats,
+@inproceedings{kv2025stochasticsplats,
   title={StochasticSplats: Stochastic Rasterization for Sorting-Free 3D Gaussian Splatting},
   author={Kheradmand, Shakiba and Vicini, Delio and Kopanas, George and Lagun, Dmitry and Yi, Kwang Moo and Matthews, Mark and Tagliasacchi, Andrea},
   booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
   year={2025}
 }
+
+```
