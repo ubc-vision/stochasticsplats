@@ -43,6 +43,7 @@ struct Texture
     ~Texture();
 
     void Bind(int unit) const;
+    int GetObj() const { return texture; }
 
     uint32_t texture;
     bool hasAlphaChannel;

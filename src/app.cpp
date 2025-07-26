@@ -1,6 +1,8 @@
 /*
     Copyright (c) 2024 Anthony J. Thibault
     This software is licensed under the MIT License. See LICENSE for more details.
+
+    Modified by: Shakiba Kheradmand, 2025
 */
 
 #include "app.h"
@@ -328,8 +330,8 @@ App::ParseResult App::ParseArguments(int argc, const char* argv[])
         i++;
         continue;
       }
-      if (strcmp(argv[i], "--taa") == 0) {
-        opt.taa = true;
+      if (strcmp(argv[i], "--no-taa") == 0) {
+        opt.taa = false;
         continue;
       }
 
@@ -450,7 +452,7 @@ bool App::Init()
 
     if (opt.vrMode)
     {
-        xrBuddy = std::make_shared<XrBuddy>(mainContext, glm::vec2(Z_NEAR, Z_FAR));
+        xrBuddy = std::make_shared<XrBuddy>(mainContext, glm::vec2(Z_NEAR, Z_FAR), sampleCount);
         if (!xrBuddy->Init())
         {
             Log::E("OpenXR Init failed\n");
@@ -589,13 +591,14 @@ bool App::Init()
     gaussianCloud->PruneSplats(focalPoint, SPLAT_COUNT);
 #endif
 
-    splatRenderer = std::make_shared<SplatRenderer>();
+    splatRenderer = std::make_shared<splat::SplatRenderer>();
 #if __ANDROID__
     bool useRgcSortOverride = true;
 #else
     bool useRgcSortOverride = false;
 #endif
-    if (!splatRenderer->Init(gaussianCloud, isFramebufferSRGBEnabled, useRgcSortOverride, GetRenderMode()))
+    int eyeCount = opt.vrMode ? 2 : 1;
+    if (!splatRenderer->Init(gaussianCloud, isFramebufferSRGBEnabled, useRgcSortOverride, GetRenderMode(), eyeCount, customWidth, customHeight, opt.taa))
     {
         Log::E("Error initializing splat renderer!\n");
         return false;
@@ -643,10 +646,15 @@ bool App::Init()
             }
             else
             {
+                GLint presentFbo = 0;
+                glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &presentFbo);
+
                 if (viewNum == 0)
                 {
-                    splatRenderer->Sort(fullEyeMat, projMat, viewport, nearFar);
+                    splatRenderer->Sort(fullEyeMat, projMat, nearFar);
                 }
+                splatRenderer->SetActiveEye(viewNum);
+                splatRenderer->SetPresentFbo((GLuint)presentFbo);
                 splatRenderer->Render(fullEyeMat, projMat, viewport, nearFar);
             }
         });
@@ -675,6 +683,7 @@ bool App::Init()
     {
         glViewport(0, 0, newWidth, newHeight);
         resizeCallback(newWidth, newHeight);
+        splatRenderer->resetTemporalTextures(newWidth, newHeight);
     });
 
     inputBuddy->OnKey(SDLK_ESCAPE, [this](bool down, uint16_t mod)
@@ -700,6 +709,7 @@ bool App::Init()
                 cameraIndex -= (int)camerasConfig->GetNumCameras();
             }
             flyCam->SetCameraMat(camerasConfig->GetCameraVec()[cameraIndex].mat);
+            splatRenderer->resetTemporalTextures();
         }
     });
 
@@ -713,6 +723,7 @@ bool App::Init()
                 cameraIndex += (int)camerasConfig->GetNumCameras();
             }
             flyCam->SetCameraMat(camerasConfig->GetCameraVec()[cameraIndex].mat);
+            splatRenderer->resetTemporalTextures();
         }
     });
 
@@ -1107,7 +1118,7 @@ bool App::Render(float dt, const glm::ivec2& windowSize)
         }
         else
         {
-            splatRenderer->Sort(cameraMat, projMat, viewport, nearFar);
+            splatRenderer->Sort(cameraMat, projMat, nearFar);
             splatRenderer->Render(cameraMat, projMat, viewport, nearFar);
         }
 

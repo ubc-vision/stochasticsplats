@@ -30,7 +30,7 @@ Welcome to the StochasticSplats project repository!
 
 ## Overview
 
-This repository builds upon and extends the capabilities of [Splatapult](https://github.com/hyperlogic/splatapult), a 3D Gaussian splats viewer. StochasticSplats introduces stochastic rasterization methods enabling sorting-free 3D Gaussian splatting.
+This repository builds upon and extends the capabilities of [Splatapult](https://github.com/hyperlogic/splatapult), a 3D Gaussian splats viewer written by Anthony J. Thibault. StochasticSplats introduces stochastic rasterization methods enabling sorting-free 3D Gaussian splatting. You can run the app on desktop or in VR mode.
 
 For a detailed explanation of controls and features, please refer to the [original README](https://github.com/hyperlogic/splatapult#readme).
 
@@ -42,6 +42,7 @@ To run StochasticSplats, follow these steps:
 ### 1. Prepare Your Scene
 Ensure your scene is in the standard 3D Gaussian Splatting format, which consists of a directory containing:
 - `cameras.json`
+- `input.ply`
 - A `pointcloud/` subdirectory with the point cloud data.
 
 ### 2. Run the Viewer
@@ -49,17 +50,22 @@ Execute the viewer from your build directory, providing the path to your scene.
 
 **Command Syntax:**
 ```sh
-splatapult.exe [path/to/scene] [options]
+splatapult.exe [options] [path/to/scene] [options]
 ./build/splatapult [path/to/scene] [options]
 ```
 
-**Example:**
+**Example on Desktop:**
 ```sh
-splatapult.exe path/to/my/scene --render_mode ST --width 1920 --height 1080
+splatapult.exe path/to/my/scene --render_mode [AB | ST | ST-popfree] --width 1920 --height 1080
+```
+
+**Example on VR:**
+```sh
+splatapult.exe -v path/to/my/scene --render_mode [AB | ST | ST-popfree] --width 1692 --height 1824
 ```
 
 ### Command-Line Options
-The following table details the available command-line arguments:
+The following table details the command-line arguments added in this code base. For the complete options, please refere to [original README](https://github.com/hyperlogic/splatapult#readme).
 
 | Option          | Description                                                                                                                                                                                       | Default |
 |-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------:|

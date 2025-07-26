@@ -1,6 +1,8 @@
 /*
     Copyright (c) 2024 Anthony J. Thibault
     This software is licensed under the MIT License. See LICENSE for more details.
+
+    Modified by: Shakiba Kheradmand, 2025
 */
 
 #pragma once
@@ -23,7 +25,7 @@ class MagicCarpet;
 class PointCloud;
 class PointRenderer;
 class Program;
-class SplatRenderer;
+namespace splat {class SplatRenderer;}
 class TextRenderer;
 struct Texture;
 class VrConfig;
@@ -84,7 +86,7 @@ public:
         bool drawCameraPath = false;
         bool importFullSH = true;
         std::string renderMode = "ST";
-        bool taa = false;
+        bool taa = true;
     };
 
 protected:
@@ -106,7 +108,7 @@ protected:
     std::shared_ptr<PointCloud> pointCloud;
     std::shared_ptr<GaussianCloud> gaussianCloud;
     std::shared_ptr<PointRenderer> pointRenderer;
-    std::shared_ptr<SplatRenderer> splatRenderer;
+    std::shared_ptr<splat::SplatRenderer> splatRenderer;
 
     std::shared_ptr<Program> desktopProgram;
     std::shared_ptr<FrameBuffer> fbo;

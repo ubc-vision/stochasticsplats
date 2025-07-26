@@ -1,3 +1,7 @@
+/*
+    Copyright (c) 2025 Shakiba Kheradmand
+*/
+
 /*%%HEADER%%*/
 
 /*%%DEFINES%%*/

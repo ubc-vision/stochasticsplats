@@ -5,7 +5,9 @@
 
 #include "xrbuddy.h"
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <string.h>
 #include <vector>
 
@@ -835,7 +837,8 @@ static bool CreateFrameBuffer(GLuint& frameBuffer)
 static bool CreateSwapchains(XrInstance instance, XrSession session,
                              const std::vector<XrViewConfigurationView>& viewConfigs,
                              std::vector<XrBuddy::SwapchainInfo>& swapchains,
-                             std::vector<std::vector<XrBuddy::SwapchainImage>>& swapchainImages)
+                             std::vector<std::vector<XrBuddy::SwapchainImage>>& swapchainImages,
+                             int sampleCount)
 {
     XrResult result;
     uint32_t swapchainFormatCount;
@@ -861,7 +864,7 @@ static bool CreateSwapchains(XrInstance instance, XrSession session,
         }
     }
 
-    std::vector<uint64_t> formats = {GL_R11F_G11F_B10F_EXT, GL_RGB16F_EXT, GL_RGBA};
+    std::vector<uint64_t> formats = {GL_RGBA8, GL_RGBA, GL_R11F_G11F_B10F_EXT, GL_RGB16F_EXT};
     uint32_t foundFormatIndex = swapchainFormatCount;
     for (auto&& desiredFormat : formats)
     {
@@ -889,10 +892,12 @@ static bool CreateSwapchains(XrInstance instance, XrSession session,
     {
         Log::W("could not find any desired swapchain format!\n");
         format = swapchainFormats[0];
+        Log::I("Using fallback format: 0x%x\n", format);
     }
     else
     {
         format = swapchainFormats[foundFormatIndex];
+        Log::I("Using swapchain format: 0x%x\n", format);
     }
 
     std::vector<uint32_t> swapchainLengths(viewConfigs.size());
@@ -901,13 +906,20 @@ static bool CreateSwapchains(XrInstance instance, XrSession session,
 
     for (uint32_t i = 0; i < viewConfigs.size(); i++)
     {
+        // Always use 1 sample for swapchain since we implement application-level multisampling
+        uint32_t swapchainSampleCount = 1;
+        if (sampleCount > 1)
+        {
+            Log::I("Using application-level %dx super sampling for view %d\n", sampleCount, i);
+        }
+        
         XrSwapchainCreateInfo sci = {};
         sci.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
         sci.next = NULL;
         sci.createFlags = 0;
         sci.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
         sci.format = format;
-        sci.sampleCount = 1;
+        sci.sampleCount = swapchainSampleCount;
         sci.width = viewConfigs[i].recommendedImageRectWidth;
         sci.height = viewConfigs[i].recommendedImageRectHeight;
         sci.faceCount = 1;
@@ -974,10 +986,93 @@ static GLuint CreateDepthTexture(GLuint colorTexture, GLint width, GLint height)
     return depthTexture;
 }
 
-XrBuddy::XrBuddy(MainContext& mainContextIn, const glm::vec2& nearFarIn):
+static bool CreateSuperSampleBuffers(GLint targetWidth, GLint targetHeight, int sampleCount, SuperSampleBuffers& buffers)
+{
+    // Calculate super sampling dimensions
+    int superFactor = (int)sqrt(sampleCount);
+    if (superFactor * superFactor != sampleCount)
+    {
+        if (sampleCount <= 4) superFactor = 2;
+        else if (sampleCount <= 9) superFactor = 3;
+        else superFactor = 4;
+    }
+    
+    buffers.targetWidth = targetWidth;
+    buffers.targetHeight = targetHeight;
+    buffers.superWidth = targetWidth * superFactor;
+    buffers.superHeight = targetHeight * superFactor;
+    
+    // Create super sample framebuffer
+    glGenFramebuffers(1, &buffers.framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, buffers.framebuffer);
+    
+    // Create high-resolution color texture
+    glGenTextures(1, &buffers.colorTexture);
+    glBindTexture(GL_TEXTURE_2D, buffers.colorTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffers.superWidth, buffers.superHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buffers.colorTexture, 0);
+    
+    // Create high-resolution depth texture
+    glGenTextures(1, &buffers.depthTexture);
+    glBindTexture(GL_TEXTURE_2D, buffers.depthTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, buffers.superWidth, buffers.superHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, buffers.depthTexture, 0);
+    
+    // Create resolve framebuffer (for downsampling)
+    glGenFramebuffers(1, &buffers.resolveFramebuffer);
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        Log::E("Super sample framebuffer incomplete: 0x%x\n", status);
+        return false;
+    }
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    int actualSamples = superFactor * superFactor;
+    Log::I("Created super sample buffers %dx%d -> %dx%d (%dx super sampling)\n", 
+           buffers.superWidth, buffers.superHeight, targetWidth, targetHeight, actualSamples);
+    return true;
+}
+
+static void DestroySuperSampleBuffers(SuperSampleBuffers& buffers)
+{
+    if (buffers.framebuffer)
+    {
+        glDeleteFramebuffers(1, &buffers.framebuffer);
+        buffers.framebuffer = 0;
+    }
+    if (buffers.colorTexture)
+    {
+        glDeleteTextures(1, &buffers.colorTexture);
+        buffers.colorTexture = 0;
+    }
+    if (buffers.depthTexture)
+    {
+        glDeleteTextures(1, &buffers.depthTexture);
+        buffers.depthTexture = 0;
+    }
+    if (buffers.resolveFramebuffer)
+    {
+        glDeleteFramebuffers(1, &buffers.resolveFramebuffer);
+        buffers.resolveFramebuffer = 0;
+    }
+}
+
+XrBuddy::XrBuddy(MainContext& mainContextIn, const glm::vec2& nearFarIn, int sampleCountIn):
     mainContext(mainContextIn)
 {
     nearFar = nearFarIn;
+    sampleCount = sampleCountIn;
 
 #ifdef XR_USE_GRAPHICS_API_OPENGL
     std::vector<const char*> requiredExtensionVec = {XR_KHR_OPENGL_ENABLE_EXTENSION_NAME};
@@ -1089,7 +1184,7 @@ bool XrBuddy::Init()
         return false;
     }
 
-    if (!CreateSwapchains(instance, session, viewConfigs, swapchains, swapchainImages))
+    if (!CreateSwapchains(instance, session, viewConfigs, swapchains, swapchainImages, sampleCount))
     {
         return false;
     }
@@ -1629,6 +1724,13 @@ bool XrBuddy::Shutdown()
         glDeleteTextures(1, &iter.second);
     }
     colorToDepthMap.clear();
+    
+    // Clean up super sample buffers
+    for (auto& iter : superSampleBuffersMap)
+    {
+        DestroySuperSampleBuffers(iter.second);
+    }
+    superSampleBuffersMap.clear();
 
     if (frameBuffer)
     {
@@ -1802,12 +1904,73 @@ bool XrBuddy::RenderLayer(XrTime predictedDisplayTime,
 void XrBuddy::RenderView(const XrCompositionLayerProjectionView& layerView, uint32_t frameBuffer,
                          uint32_t colorTexture, uint32_t depthTexture, int32_t viewNum)
 {
+    const GLsizei width = static_cast<GLsizei>(layerView.subImage.imageRect.extent.width);
+    const GLsizei height = static_cast<GLsizei>(layerView.subImage.imageRect.extent.height);
+    
+    // --- SUPERSAMPLING PATH ---
+    if (sampleCount > 1)
+    {
+        std::pair<int, int> sizeKey(width, height);
+        auto ssIter = superSampleBuffersMap.find(sizeKey);
+        
+        if (ssIter == superSampleBuffersMap.end())
+        {
+            // Create new super sample buffers for this size if they don't exist
+            SuperSampleBuffers newBuffers;
+            if (CreateSuperSampleBuffers(width, height, sampleCount, newBuffers))
+            {
+                ssIter = superSampleBuffersMap.insert({sizeKey, newBuffers}).first;
+            }
+            else
+            {
+                Log::W("Failed to create super sample buffers, falling back to direct rendering\n");
+            }
+        }
+        
+        // If we have valid supersampling buffers, use them
+        if (ssIter != superSampleBuffersMap.end())
+        {
+            SuperSampleBuffers& ssBuffers = ssIter->second;
+            
+            // 1. Render scene to the high-resolution framebuffer
+            glBindFramebuffer(GL_FRAMEBUFFER, ssBuffers.framebuffer);
+            glViewport(0, 0, ssBuffers.superWidth, ssBuffers.superHeight);
+            
+            // Set up matrices and viewport for the scene
+            const float tanLeft = tanf(layerView.fov.angleLeft);
+            const float tanRight = tanf(layerView.fov.angleRight);
+            const float tanDown = tanf(layerView.fov.angleDown);
+            const float tanUp = tanf(layerView.fov.angleUp);
+            glm::mat4 projMat;
+            CreateProjection(glm::value_ptr(projMat), GRAPHICS_OPENGL, tanLeft, tanRight, tanUp, tanDown, nearFar.x, nearFar.y);
+            const auto& pose = layerView.pose;
+            glm::quat eyeRot(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
+            glm::vec3 eyePos(pose.position.x, pose.position.y, pose.position.z);
+            glm::mat4 eyeMat = MakeMat4(eyeRot, eyePos);
+            glm::vec4 viewport(0.0f, 0.0f, (float)ssBuffers.superWidth, (float)ssBuffers.superHeight);
+            
+            renderCallback(projMat, eyeMat, viewport, nearFar, viewNum);
+            
+            // 2. Downsample (blit) to the final swapchain texture using the dedicated resolve FBO
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, ssBuffers.framebuffer);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, ssBuffers.resolveFramebuffer);
+            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
+
+            glBlitFramebuffer(0, 0, ssBuffers.superWidth, ssBuffers.superHeight,
+                              0, 0, ssBuffers.targetWidth, ssBuffers.targetHeight,
+                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            return; // Finished rendering this view
+        }
+    }
+    
+    // --- DIRECT RENDERING PATH (no supersampling or if supersampling setup failed) ---
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
     glViewport(static_cast<GLint>(layerView.subImage.imageRect.offset.x),
                static_cast<GLint>(layerView.subImage.imageRect.offset.y),
-               static_cast<GLsizei>(layerView.subImage.imageRect.extent.width),
-               static_cast<GLsizei>(layerView.subImage.imageRect.extent.height));
+               width, height);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
@@ -1824,8 +1987,8 @@ void XrBuddy::RenderView(const XrCompositionLayerProjectionView& layerView, uint
     glm::quat eyeRot(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
     glm::vec3 eyePos(pose.position.x, pose.position.y, pose.position.z);
     glm::mat4 eyeMat = MakeMat4(eyeRot, eyePos);
-    glm::vec4 viewport(layerView.subImage.imageRect.offset.x, layerView.subImage.imageRect.offset.y,
-                       layerView.subImage.imageRect.extent.width, layerView.subImage.imageRect.extent.height);
+    glm::vec4 viewport((float)layerView.subImage.imageRect.offset.x, (float)layerView.subImage.imageRect.offset.y,
+                       (float)layerView.subImage.imageRect.extent.width, (float)layerView.subImage.imageRect.extent.height);
     renderCallback(projMat, eyeMat, viewport, nearFar, viewNum);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

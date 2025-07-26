@@ -46,12 +46,35 @@
 
 #include <glm/glm.hpp>
 
+#ifndef __ANDROID__
+#include <GL/glew.h>
+#else
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
+#endif
+
 #include "maincontext.h"
+
+// Moved from XrBuddy class to be a standalone struct
+struct SuperSampleBuffers {
+    GLuint framebuffer;
+    GLuint colorTexture;
+    GLuint depthTexture;
+    GLuint resolveFramebuffer;
+
+    GLsizei targetWidth;
+    GLsizei targetHeight;
+    GLsizei superWidth;
+    GLsizei superHeight;
+    
+    SuperSampleBuffers() : framebuffer(0), colorTexture(0), depthTexture(0), resolveFramebuffer(0),
+                         targetWidth(0), targetHeight(0), superWidth(0), superHeight(0) {}
+};
 
 class XrBuddy
 {
 public:
-    XrBuddy(MainContext& mainContextIn, const glm::vec2& nearFarIn);
+    XrBuddy(MainContext& mainContextIn, const glm::vec2& nearFarIn, int sampleCountIn);
 
     bool Init();
     bool PollEvents();
@@ -148,6 +171,10 @@ protected:
 
     uint32_t frameBuffer = 0;
     std::map<uint32_t, uint32_t> colorToDepthMap;
+    
+    // Key: (width, height), Value: SuperSampleBuffers
+    std::map<std::pair<int, int>, SuperSampleBuffers> superSampleBuffersMap;
+
     XrTime lastPredictedDisplayTime = 0;
     uint32_t prevLastColorTexture = 0;
     uint32_t lastColorTexture = 0;
@@ -155,4 +182,5 @@ protected:
 
     RenderCallback renderCallback;
     glm::vec2 nearFar;
+    int sampleCount;
 };

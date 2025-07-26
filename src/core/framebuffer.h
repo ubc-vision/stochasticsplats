@@ -8,6 +8,13 @@
 #include <stdint.h>
 #include <memory>
 
+#ifndef __ANDROID__
+#include <GL/glew.h>
+#else
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
+#endif
+
 struct Texture;
 
 struct FrameBuffer
@@ -16,7 +23,7 @@ struct FrameBuffer
     ~FrameBuffer();
 
     void Bind() const;
-    void AttachColor(std::shared_ptr<Texture> colorTex);
+    void AttachColor(std::shared_ptr<Texture> colorTex, GLenum attachment = GL_COLOR_ATTACHMENT0);
     void AttachDepth(std::shared_ptr<Texture> depthTex);
     void AttachStencil(std::shared_ptr<Texture> stencilTex);
 

@@ -35,10 +35,11 @@ void FrameBuffer::Bind() const
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void FrameBuffer::AttachColor(std::shared_ptr<Texture> colorTex)
+void FrameBuffer::AttachColor(std::shared_ptr<Texture> colorTex, GLenum attachment)
 {
+    if (!colorTex) return;
     Bind();
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex->texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, colorTex->GetObj(), 0);
     colorAttachment = colorTex;
 }
 
