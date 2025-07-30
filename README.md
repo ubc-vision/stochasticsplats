@@ -35,6 +35,12 @@ This repository builds upon and extends the capabilities of [Splatapult](https:/
 For a detailed explanation of controls and features, please refer to the [original README](https://github.com/hyperlogic/splatapult#readme).
 
 
+## 🤝 Contributing  
+Found a bug or have an idea to improve this project?  
+I’d love your input! Please open a pull request.  
+Thank you for helping make this project better.
+
+
 ## 🚀 How to Run
 
 To run StochasticSplats, follow these steps:
