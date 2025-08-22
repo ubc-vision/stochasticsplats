@@ -402,6 +402,12 @@ App::ParseResult App::ParseArguments(int argc, const char* argv[])
 
     Log::SetLevel(opt.debugLogging ? Log::Debug : Log::Warning);
 
+    // [TODO] When samples > 1, turn off TAA
+    if (sampleCount > 1) {
+        opt.taa = false;
+        std::cout << "Info: TAA is disabled when using multiple samples." << std::endl;
+    }
+
     std::filesystem::path plyPath(plyFilename);
     if (!std::filesystem::exists(plyPath) || !std::filesystem::is_regular_file(plyPath))
     {

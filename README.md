@@ -79,6 +79,7 @@ The following table details the command-line arguments added in this code base. 
 | `--height`      | Sets the height of the application window.                                                                                                                                                        | `840`   |
 | `--render_mode` | Specifies the rendering mode.<ul><li>`AB`: Alpha Blending</li><li>`ST`: Stochastic Rendering (for original 3DGS scenes)</li><li>`ST-popfree`: Pop-free Stochastic Rendering (for scenes trained/finetuned using our method)</li></ul> | `AB`    |
 | `--samples`     | Defines the number of samples for stochastic modes. The maximum value depends on your hardware.                                                                                                   |  `1`    |
+| `--no-taa`      | Disables Temporal Anti-Aliasing (TAA). By default, TAA is enabled but automatically turns off when samples > 1.                                                                                  | `false` |
 
 
 ## Citation
