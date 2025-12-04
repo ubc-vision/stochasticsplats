@@ -1,0 +1,4 @@
+[submodule "training/StochasticSplats-training"]
+	path = training/StochasticSplats-training
+	url = https://github.com/shakibakh/StochasticSplats-training.git
+	branch = base
